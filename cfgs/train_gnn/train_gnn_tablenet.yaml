@@ -1,0 +1,44 @@
+
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/graph.yaml,
+            others: {subset: 'train', npoints: None},
+            use_distance_edges: False, 
+            use_hierarchy_edges: True,
+            return_raw_data: True
+            },
+}
+
+optimizer: {
+  lr: 0.001, #0.005,
+}
+
+model: {
+  NAME: GNN,
+  layer: GATConv,
+  input_embedding: True,
+  mlp_input_channels: 384,
+  mlp_hidded_channels: 192, # default: 192
+  gnn_input_channels: 64,
+  gnn_hidden_channels: 64,
+  classes: 22,
+  heads: 6,
+  heads_final_conv: 1,
+  dropout: 0.5, 
+  edge_dim: 1, 
+  depth: 4, 
+  use_edge_attr: False, 
+  use_class_weights: False, 
+  noise_percentage: 0.
+}
+
+batch_size: 128
+epochs: 300
+labels: /srv/healthcare/datascience/data/part-net/data_table/all_unique_integer_label_pairs.csv 
+wandb_project: GNN Node Classification

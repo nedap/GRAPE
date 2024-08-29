@@ -1,0 +1,7 @@
+NAME: Ceasar
+DATA_PATH: /srv/healthcare/datascience/data/3D-Humans/ceasar_processed/
+LABELS: False
+BASE_TYPE: False
+NUM_CATEGORY: 12
+N_POINTS: 12499
+

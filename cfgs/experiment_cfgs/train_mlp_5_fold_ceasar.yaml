@@ -1,0 +1,33 @@
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/mlp_folds_caesar.yaml,
+            use_distance_edges: False, 
+            use_hierarchy_edges: True
+            },
+    test : { _base_: cfgs/dataset_cfgs/mlp_test_caesar.yaml,
+            use_distance_edges: False, 
+            use_hierarchy_edges: True
+            },
+}
+
+optimizer: {
+  lr: 0.001, #0.005,
+}
+
+model: {
+  NAME: MLP,
+  trainable_params: 10,
+  num_group: 256,
+  embedding_dim: 384,
+  classes: 12,
+}
+
+batch_size: 8
+epochs: 300
+wandb_project: MLP Classification CAESAR

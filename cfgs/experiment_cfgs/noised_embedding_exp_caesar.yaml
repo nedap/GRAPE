@@ -1,0 +1,40 @@
+
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/graph_folds_ceasar.yaml,
+            use_distance_edges: False, 
+            use_hierarchy_edges: True
+            },
+    test : { _base_: cfgs/dataset_cfgs/graph_test_ceasar.yaml,
+            use_distance_edges: False, 
+            use_hierarchy_edges: True
+            },
+}
+
+optimizer: {
+  lr: 0.001, #0.005,
+}
+
+model: {
+  NAME: GNN,
+  gnn_input_channels: 384,
+  gnn_hidden_channels: 64,
+  classes: 12,
+  heads: 6,
+  heads_final_conv: 4,
+  dropout: 0.5, 
+  depth: 2, 
+  noise_percentage: 0
+}
+
+dummy_classifier: False     # if True, we use sklearns dummy classifier, this will serve as a baseline. Set noise_percentage to None if you use this. 
+batch_size: 8
+epochs: 1000
+labels: /srv/healthcare/datascience/data/3D-Humans/final_point_clouds/all_unique_integer_label_pairs.csv
+wandb_project: Noised Embedding CAESAR

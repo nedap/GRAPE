@@ -1,0 +1,4 @@
+NAME: GraphDataset
+DATA_PATH: /srv/healthcare/datascience/data/table_graph_uc/
+# DATA_PATH: /srv/healthcare/datascience/data/graph_embeddings/ 
+# DATA_PATH: /srv/healthcare/datascience/data/GRAPE/table_occluded/complete/

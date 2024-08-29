@@ -1,0 +1,6 @@
+NAME: Ceasar
+DATA_PATH: /srv/healthcare/datascience/data/3D-Humans/final_point_clouds/
+LABELS: True
+BASE_TYPE: False # this is for PartNet
+NUM_CATEGORY: 20
+N_POINTS: 12499

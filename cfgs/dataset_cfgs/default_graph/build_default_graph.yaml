@@ -1,0 +1,6 @@
+NAME: PartNet
+DATA_PATH: /srv/healthcare/datascience/data/part-net/data_table/
+LABELS: True
+BASE_TYPE: True
+NUM_CATEGORY: 22
+N_POINTS: 10000

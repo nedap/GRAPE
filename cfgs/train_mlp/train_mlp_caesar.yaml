@@ -1,0 +1,30 @@
+
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/raw_embeddings_caesar.yaml,
+            others: {subset: 'train', npoints: None},
+            },
+}
+
+optimizer: {
+  lr: 0.001, #0.005,
+}
+
+model: {
+  NAME: MLP,
+  trainable_params: 10,
+  num_group: 256,
+  embedding_dim: 384,
+  classes: 12,
+}
+
+batch_size: 8
+epochs: 300
+# labels: /srv/healthcare/datascience/data/3D-Humans/final_point_clouds/all_unique_integer_label_pairs.csv
+wandb_project: MLP Classification CAESAR

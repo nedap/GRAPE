@@ -1,0 +1,53 @@
+optimizer : {
+  type: AdamW,
+  kwargs: {
+  lr : 0.001,
+  weight_decay : 0.05
+}}
+
+scheduler: {
+  type: CosLR,
+  kwargs: {
+    epochs: 1000,
+    initial_epochs : 10
+}}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/ceasar.yaml,
+            others: {subset: 'train', npoints: 1024}},
+    val : { _base_: cfgs/dataset_cfgs/ceasar.yaml,
+              others: {subset: 'val', npoints: 1024}},
+    test : { _base_: cfgs/dataset_cfgs/ceasar.yaml,
+              others: {subset: 'test', npoints: 1024}}}
+
+
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+model : {
+  NAME: Point_MAE,
+  group_size: 32, # options: [64, 32, 16]
+  num_group: 32, # options: [512, 256, #128, 64]
+  loss: cdl2,
+  transformer_config: {
+    mask_ratio: 0.6,      # Default: 0.6
+    mask_type: rand,      # Default: rand | Options: [center, rand]
+    trans_dim: 384,       # Default: 384
+    encoder_dims: 384,    # Default: 384
+    depth: 12,            # Default: 12
+    drop_path_rate: 0.1,  # Default: 0.1
+    num_heads: 6,         # Default: 6
+    decoder_depth: 4,     # Default: 4
+    decoder_num_heads: 6, # Default: 384
+  },
+  }
+
+npoints: 1024 # options [4096, 1024, 8192]
+batch_size: 128 
+step_per_update : 1
+max_epoch : 2000
+wandb_project: MAE Ceasar #MAE Toy Problem

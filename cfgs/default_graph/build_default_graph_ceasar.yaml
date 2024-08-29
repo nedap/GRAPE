@@ -1,0 +1,71 @@
+optimizer : {
+  type: AdamW,
+  kwargs: {
+  lr : 0.001,
+  weight_decay : 0.05
+}}
+
+scheduler: {
+  type: CosLR,
+  kwargs: {
+    epochs: 600,
+    initial_epochs : 10
+}}
+
+dataset: {
+    train : { _base_: cfgs/dataset_cfgs/build_default_graph_ceasar.yaml,
+            others: {subset: 'train', npoints: 8192}},
+    # val : { _base_: cfgs/dataset_cfgs/build_default_graph.yaml,
+    #           others: {subset: 'val', npoints: 8192}},
+    # test : { _base_: cfgs/dataset_cfgs/build_default_graph.yaml,
+    #           others: {subset: 'test', npoints: 8192}}
+              }
+
+
+device: {
+  name: cuda, 
+  device_id: 0,           # select the second H100 (the first is used by Guido)
+  deterministic: true,    # Ensure deterministic behavior (useful for reproducibility)
+  benchmark: true,        # Enable cudnn auto-tuner to find the best algorithm to use for your hardware
+}
+
+group_and_encode_model: {
+  NAME: GroupAndEncode,
+  pretrained_ckpnt: /home/toy-problem/experiments/train_ssl/cfgs/experiment/ckpnts/six_conference_raise-epoch=1988.ckpt, 
+  group_size: 32, 
+  num_group: 256, #128, #256,
+  transformer_config: {
+    trans_dim: 384,
+    encoder_dims: 384,
+    depth: 12,
+    drop_path_rate: 0.1,
+    num_heads: 6,
+  },
+}
+
+
+model : {
+  NAME: Point_MAE,
+  group_size: 32, 
+  num_group: 256, #128, #256, 
+  loss: cdl2,
+  transformer_config: {
+    mask_ratio: 0.6,
+    mask_type: 'rand',
+    trans_dim: 384,
+    encoder_dims: 384,
+    depth: 12,
+    drop_path_rate: 0.1,
+    num_heads: 6,
+    decoder_depth: 4,
+    decoder_num_heads: 6,
+  },
+  }
+
+npoints: 8192 #8192 # 4096 #1024
+batch_size: 8 #128
+step_per_update : 1
+max_epoch : 300
+labels: /srv/healthcare/datascience/data/3D-Humans/final_point_clouds/all_unique_integer_label_pairs.csv
+default_graph: /home/toy-problem/datasets/graph/default_ceasar_graph.yaml   # default graph structure for Knife
+graph_data_path: /srv/healthcare/datascience/data/GRAPE/ceasar/complete          # here the newly created Graph dataset will be stored
