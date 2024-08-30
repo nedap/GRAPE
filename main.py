@@ -1,5 +1,4 @@
 import torch
-import wandb
 from pytorch_lightning.loggers import WandbLogger
 
 from utils import parser

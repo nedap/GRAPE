@@ -18,11 +18,13 @@ train_transforms = transforms.Compose(
     ]
 )
 
+
 class MAELightningModule(pl.LightningModule):
     """
     Lightning Module for Point-MAE.
     Masked Autoencoder for pointcloud Self Supervised Learning. 
     """
+
     def __init__(self, cfg, args) -> None:
         super(MAELightningModule, self).__init__()
         self.base_model = model_builder(cfg.model)
@@ -32,7 +34,7 @@ class MAELightningModule(pl.LightningModule):
 
     def forward(self, points, vis=False):
         return self.base_model(points, vis=vis)
-    
+
     def training_step(self, batch, batch_idx):
         points = train_transforms(batch)
         loss = self.base_model(points)
@@ -56,19 +58,19 @@ class MAELightningModule(pl.LightningModule):
             self.log('Training Loss', loss)
 
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         if batch_idx == 0 and self.wandb:
             # if vis=True, model returns pcd data next to the loss
             output = self.base_model(batch, vis=True)
 
             # Move all tensors to CPU
-            (reconstructed_pcd, unmasked_points, centers, 
-            predicted_points, points, masked, latent, loss) = to_cpu(*output)
+            (reconstructed_pcd, unmasked_points, centers,
+             predicted_points, points, masked, latent, loss) = to_cpu(*output)
 
             # Log point clouds
-            self.log_pointclouds(reconstructed_pcd, unmasked_points, centers, 
-                                predicted_points, points, masked, latent)
+            self.log_pointclouds(reconstructed_pcd, unmasked_points, centers,
+                                 predicted_points, points, masked, latent)
 
             # Log coefficient of variation
             self.log_coefficient_of_variation(predicted_points)
@@ -76,7 +78,7 @@ class MAELightningModule(pl.LightningModule):
         else:
             loss = self.base_model(batch)
             if self.wandb: self.log('Validation Loss', loss)
-    
+
         return loss
 
     def test_step(self):
@@ -90,8 +92,8 @@ class MAELightningModule(pl.LightningModule):
     def configure_optimizers(self):
         optimizer, scheduler = build_optim_scheme(self.base_model, self.cfg)
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'Training Loss'}
-    
-    def log_pointclouds(self, reconstructed_pcd, unmasked_points, centers, 
+
+    def log_pointclouds(self, reconstructed_pcd, unmasked_points, centers,
                         predicted_points, points, masked, latent):
         wandb.log({
             "Reconstructed Pointcloud": wandb.Object3D(reconstructed_pcd),
@@ -113,7 +115,7 @@ class MAELightningModule(pl.LightningModule):
         reshaped_points = predicted_points.reshape(groups, points_per_group, 6)[:, :, 0:3]
         mcv = modified_coefficient_of_variation(reshaped_points)
         self.log("Difference between point patches", mcv)
-    
+
     @classmethod
     def load_and_freeze_encoder(self, checkpoint_path: str, cfg, args, freeze: bool = True):
         """
@@ -131,7 +133,7 @@ class MAELightningModule(pl.LightningModule):
         if freeze:
             for param in mae_encoder.parameters():
                 param.requires_grad = False
- 
+
         return mae_encoder
 
 
@@ -141,6 +143,7 @@ class GAELightningModule(pl.LightningModule):
     Extract latents and labels per patch using pretrained PointMAE.
     GAE = Group And Encode
     """
+
     def __init__(self, cfg, args, pretrained_encoder=None, base_type=False, mask=False) -> None:
         super(GAELightningModule, self).__init__()
         if pretrained_encoder is not None:
@@ -158,10 +161,9 @@ class GAELightningModule(pl.LightningModule):
         self.wandb = args.wandb
         self.base_type = base_type
 
-
     def forward(self, points, labels, return_labels=False):
         return self.base_model(points, labels)
-    
+
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         """
         The predict step for the GroupAndEncode model in a PyTorch Lightning workflow.
@@ -186,7 +188,7 @@ class GAELightningModule(pl.LightningModule):
 class GNNLightningModule(pl.LightningModule):
     def __init__(self, cfg, args):
         super(GNNLightningModule, self).__init__()
-        self.model = model_builder(cfg.model) 
+        self.model = model_builder(cfg.model)
         self.cfg = cfg
         self.args = args
 
@@ -207,11 +209,11 @@ class GNNLightningModule(pl.LightningModule):
 
         loss, acc, pred, y = self.model(x, edge_index, distance, y)
         return loss, acc, pred, y
-    
+
     def configure_optimizers(self):
         optimizer = torch.optim.RAdam(self.model.parameters(), lr=self.cfg.optimizer.lr)
         return optimizer
-        
+
     def training_step(self, batch, batch_idx):
         # TODO: remove manual batch size assignmet
         # TODO: ass wandb
@@ -219,7 +221,7 @@ class GNNLightningModule(pl.LightningModule):
         self.log('Training Loss', loss, batch_size=self.cfg.batch_size)
         self.log('Training Accuracy', acc, batch_size=self.cfg.batch_size)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         # TODO: remove manual batch size assignmet
         loss, acc, pred, y = self.forward(batch)
@@ -232,12 +234,10 @@ class GNNLightningModule(pl.LightningModule):
         self.all_y_true.append(y_true)
         self.all_y_pred.append(y_pred)
 
-    
     def test_step(self, batch, batch_idx):
         loss, acc, _, _ = self.forward(batch)
         self.log('Test Loss', loss, batch_size=self.cfg.batch_size)
         self.log('Test Accuracy', acc, batch_size=self.cfg.batch_size)
-
 
     def on_validation_epoch_end(self):
         # Flatten lists of arrays into single arrays for reporting
@@ -270,7 +270,7 @@ class GNNLightningModule(pl.LightningModule):
             except (ValueError, IndexError):
                 # Handle unexpected index values
                 return 'unknown'
-            
+
         report_df['label name'] = report_df.index.map(map_label_names)
 
         # Ensure 'label name' column is first
@@ -286,31 +286,30 @@ class GNNLightningModule(pl.LightningModule):
             wandb.log({table_name: wandb.Table(dataframe=report_df)})
 
 
-
-
 class MLPLightningModule(pl.LightningModule):
     def __init__(self, cfg, args):
         super(MLPLightningModule, self).__init__()
-        self.model = model_builder(cfg.model) 
+        self.model = model_builder(cfg.model)
         self.cfg = cfg
         self.args = args
 
         self.wandb = args.wandb
+
     def forward(self, batch):
         x, y = batch
         balanced_acc, loss = self.model(x, y)
         return balanced_acc, loss
-    
+
     def configure_optimizers(self):
         optimizer = torch.optim.RAdam(self.model.parameters(), lr=self.cfg.optimizer.lr)
         return optimizer
-        
+
     def training_step(self, batch, batch_idx):
         balanced_acc, loss = self.forward(batch)
         self.log('Training Loss', loss, batch_size=self.cfg.batch_size)
         self.log('Training Accuracy', balanced_acc, batch_size=self.cfg.batch_size)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         balanced_acc, loss = self.forward(batch)
         self.log('Validation Loss', loss, batch_size=self.cfg.batch_size)

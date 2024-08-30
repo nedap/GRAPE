@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
+
 class IO:
     """
     Serves as a utility for reading data from files with different extensions:
@@ -36,11 +37,10 @@ class IO:
                 supported_extensions = ['.npy', '.h5', '.ply', '.csv', '.pickle', 'json']
                 raise Exception(f'Unsupported file extension {file_extension}.'
                                 f'Supported exstesions: {supported_extensions}')
-            
+
         except Exception as e:
             raise logging.error(f'Error occurred while reading {file_path} file: {e}')
 
-        
     @classmethod
     def _read_npy(cls, file_path: Path) -> np.ndarray:
         """
@@ -48,12 +48,12 @@ class IO:
 
         :param file_path: Path to the .npy file.
         :return: Data as a NumPy array.
-        """ 
+        """
         try:
             return np.load(file_path)
         except Exception as e:
             raise logging.error(f'Error while reading .npy file {e}')
-    
+
     @classmethod
     def _read_h5(cls, file_path: Path, dataset: str = 'data') -> np.ndarray:
         """
@@ -62,7 +62,7 @@ class IO:
         :param file_path: Path to the HDF5 file.
         :param dataset: Name of the dataset to be read from the file. Defaults to 'data'.
         :return: Data from the specified dataset as a NumPy array.
-        """        
+        """
         try:
             with h5py.File(file_path, 'r') as f:
                 if dataset in f:
@@ -84,7 +84,7 @@ class IO:
             return np.asarray(o3d.io.read_point_cloud(str(file_path)).points)
         except Exception as e:
             raise logging.error(f'Error while reading .ply file: {e}')
-        
+
     @classmethod
     def _read_csv(cls, file_path: Path, cols=['Integer Label']) -> np.ndarray:
         """
@@ -98,7 +98,7 @@ class IO:
             return df['Integer Label'].to_numpy()
         except Exception as e:
             raise logging.error(f'Error while reading .csv file: {e}')
-        
+
     @classmethod
     def _read_pickle(cls, file_path: Path) -> Dict[str, Any]:
         """
@@ -113,7 +113,7 @@ class IO:
             return dictionary
         except Exception as e:
             raise logging.error(f'Error while reading .pickle file: {e}')
-        
+
     @classmethod
     def _read_json(cls, file_path: Path) -> Dict[str, Any]:
         """
@@ -127,5 +127,3 @@ class IO:
                 return json.load(f)
         except Exception as e:
             raise logging.error(f'Error while reading .json file: {e}')
-        
-        

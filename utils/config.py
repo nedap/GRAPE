@@ -2,23 +2,8 @@ import yaml
 import os
 import argparse
 
-from pathlib import Path
-
 from easydict import EasyDict
 from typing import Optional
-from .logger import print_log
-
-
-def log_args_to_file(args: argparse.Namespace, pre: str='args', logger: Optional[str]=None) -> None:
-    """
-    Logs the attributes of the argparse Namespace object to a file.
-    
-    :param args: argparse Namespace containing the arguments.
-    :param pre: Prefix for log messages.
-    :param logger: Optional logger name.
-    """
-    for key, val in vars(args).items():
-        print_log(f'{pre}.{key} : {val}', logger=logger)
 
 
 def merge_new_config(target_config: EasyDict, source_config: dict) -> EasyDict:
@@ -50,6 +35,7 @@ def merge_new_config(target_config: EasyDict, source_config: dict) -> EasyDict:
 
     return EasyDict(target_config)
 
+
 def cfg_from_yaml_file(cfg_file: str) -> EasyDict:
     """
     Loads and returns a configuration from a YAML file.
@@ -63,7 +49,8 @@ def cfg_from_yaml_file(cfg_file: str) -> EasyDict:
         cfg = merge_new_config(cfg, new_cfg)
     return cfg
 
-def get_cfg(args: argparse.Namespace, logger: Optional[str]=None) -> EasyDict:
+
+def get_cfg(args: argparse.Namespace, logger: Optional[str] = None) -> EasyDict:
     """
     Retrieves the configuration either from a specified file or from a previous experiment.
     
@@ -92,7 +79,7 @@ def perform_cfg_checks(cfg: argparse.Namespace) -> None:
 
         # if group_size * num_group!= 2 * num_points:
         #     raise ValueError(f"group_size * num_group != 2 * npoints\n ({group_size} * {num_group} != 2 * {num_points})")
-        
+
         # Check for model_finetune and compare transformer_config if present
         if hasattr(cfg, 'model_finetune'):
             # Extract transformer configurations
@@ -105,4 +92,5 @@ def perform_cfg_checks(cfg: argparse.Namespace) -> None:
             # Check if all specified keys are equal in both configurations
             for key in keys_to_compare:
                 if model_config.get(key, None) != finetune_config.get(key, None):
-                    raise ValueError(f"model and model_finetune have different {key} values - {model_config.get(key)} != {finetune_config.get(key)}")
+                    raise ValueError(
+                        f"model and model_finetune have different {key} values - {model_config.get(key)} != {finetune_config.get(key)}")

@@ -66,15 +66,3 @@ def build_optim_scheme(base_model, cfg):
         raise NotImplementedError()
     
     return optimizer, scheduler
-    
-
-def resume_model(base_model, args, logger=None):
-    NotImplementedError()
-
-
-def save_checkpoint(base_model, ckpt_path, logger=None):
-    NotImplementedError()
-
-
-def load_model(base_model, ckpt_path, logger=None):
-    NotImplementedError()

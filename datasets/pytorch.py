@@ -9,7 +9,6 @@ import torch.utils.data as data
 from torch_geometric.data import HeteroData, Data
 from torch_geometric.data import Dataset as GeomDataset
 
-
 from .io import IO
 from .build import DATASETS
 from utils.logger import print_log
@@ -37,7 +36,6 @@ class PartNet(data.Dataset):
         self.N_POINTS = cfg.N_POINTS
         self.sample_points_num = cfg.npoints
         self.permutation = np.arange(self.N_POINTS)
-        
 
     def pc_norm(self, pc):
         """
@@ -49,10 +47,10 @@ class PartNet(data.Dataset):
 
         centroid = np.mean(pc, axis=0)
         pc = pc - centroid
-        m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
+        m = np.max(np.sqrt(np.sum(pc ** 2, axis=1)))
         pc = pc / m
         return pc
-    
+
     def random_sample(self, pc, num):
         """
         Randomly sample points from the point cloud along with indices.
@@ -94,7 +92,7 @@ class PartNet(data.Dataset):
 
         :param idx: Index of the sample.
         :return: Sampled data.
-        """ 
+        """
         sample_dir = self.data_root / self.dir_list[idx]
         # assuming the point cloud has the same name in each dir
         pcd_file = sample_dir / 'point_sample' / 'ply-10000.ply'
@@ -111,12 +109,12 @@ class PartNet(data.Dataset):
             pcd = self.pc_norm(pcd)
             pcd = torch.from_numpy(pcd).float()
             labels = torch.tensor(labels, dtype=torch.long)
-            
+
             # to construct the default Table graph, we need to know the base type of each sample. 
             if self.base_type:
                 json_file = sample_dir / 'result.json'
                 data = IO.get(json_file)
-                base_type = self.get_base_type(data) 
+                base_type = self.get_base_type(data)
                 return pcd, labels, base_type
             else:
                 return pcd, labels
@@ -128,7 +126,7 @@ class PartNet(data.Dataset):
             pcd = torch.from_numpy(pcd).float()
 
             return pcd
-            
+
     def get_base_type(self, data):
         """
         Retrieve the base type from results.json.
@@ -142,7 +140,7 @@ class PartNet(data.Dataset):
             "pedestal_base",
             "star_leg_base"
         ]
-        
+
         def search_json(data):
             if isinstance(data, dict):
                 # Check if the 'name' key contains one of the base types
@@ -160,13 +158,11 @@ class PartNet(data.Dataset):
                     if result:
                         return result
             return None
-        
+
         return search_json(data)
-            
-        
+
     def __len__(self):
         return len(self.dir_list)
-    
 
 
 @DATASETS.register_module()
@@ -191,7 +187,6 @@ class Ceasar(data.Dataset):
         self.N_POINTS = cfg.N_POINTS
         self.sample_points_num = cfg.npoints
         self.permutation = np.arange(self.N_POINTS)
-        
 
     def pc_norm(self, pc):
         """
@@ -203,10 +198,10 @@ class Ceasar(data.Dataset):
 
         centroid = np.mean(pc, axis=0)
         pc = pc - centroid
-        m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
+        m = np.max(np.sqrt(np.sum(pc ** 2, axis=1)))
         pc = pc / m
         return pc
-    
+
     def random_sample(self, pc, num):
         """
         Randomly sample points from the point cloud along with indices.
@@ -248,7 +243,7 @@ class Ceasar(data.Dataset):
 
         :param idx: Index of the sample.
         :return: Sampled data.
-        """ 
+        """
         sample_dir = self.data_root / self.dir_list[idx]
         # assuming the point cloud has the same name in each dir
         pcd_file = sample_dir / 'point_cloud.ply'
@@ -265,9 +260,9 @@ class Ceasar(data.Dataset):
             pcd = self.pc_norm(pcd)
             pcd = torch.from_numpy(pcd).float()
             labels = torch.tensor(labels, dtype=torch.long)
-        
+
             return pcd, labels
-        
+
         else:
             pcd = IO.get(pcd_file).astype(np.float32)
             pcd, _ = self.random_sample(pcd, self.sample_points_num)
@@ -276,11 +271,10 @@ class Ceasar(data.Dataset):
             pcd = torch.from_numpy(pcd).float()
 
             return pcd
-            
-        
+
     def __len__(self):
         return len(self.dir_list)
-    
+
 
 @DATASETS.register_module()
 class GraphDataset(GeomDataset):
@@ -290,6 +284,7 @@ class GraphDataset(GeomDataset):
 
     :param config: Configuration object with dataset parameters.
     """
+
     def __init__(self, cfg):
         # TODO check if required:
         super().__init__()
@@ -329,7 +324,6 @@ class GraphDataset(GeomDataset):
 
     def __len__(self):
         return len(self.samples)
-    
 
 
 @DATASETS.register_module()
@@ -340,6 +334,7 @@ class PartNetEmbeddings(GeomDataset):
 
     :param config: Configuration object with dataset parameters.
     """
+
     def __init__(self, cfg):
         # TODO check if required:
         super().__init__()
@@ -363,7 +358,7 @@ class PartNetEmbeddings(GeomDataset):
         shuffled_embeddings, shuffled_labels = self._shuffle_embeddings_labels(embeddings, labels)
 
         return shuffled_embeddings, shuffled_labels
-    
+
     def _shuffle_embeddings_labels(self, embeddings: np.ndarray, labels: np.ndarray) -> tuple:
         """
         Shuffle embeddings and labels consistently.

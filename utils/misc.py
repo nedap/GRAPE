@@ -13,7 +13,8 @@ from typing import Tuple
 # custom function import
 from pointnet2_ops import pointnet2_utils
 
-def set_random_seed(logger: str, seed: int=42, deterministic=False) -> None:
+
+def set_random_seed(logger: str, seed: int = 42, deterministic=False) -> None:
     """
     Set a random seed for reproducability.
 
@@ -30,28 +31,16 @@ def set_random_seed(logger: str, seed: int=42, deterministic=False) -> None:
         logger.info(f'Random seed set to: {seed},'
                     f'Deterministic: {deterministic}')
 
-    
+
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
 
 
 def fps(data: torch.Tensor, npoint: int):
     fps_idx = pointnet2_utils.furthest_point_sample(data, npoint)
-    fps_data = pointnet2_utils.gather_operation(data.transpose(1, 2).contiguous(), fps_idx).transpose(1,2).contiguous()
+    fps_data = pointnet2_utils.gather_operation(data.transpose(1, 2).contiguous(), fps_idx).transpose(1, 2).contiguous()
     return fps_data
 
-           
-def save_point_cloud(np_array: np.ndarray, file_path: Path):
-    """
-    Save a numpy array as a point cloud file.
-
-    :param np_array: NumPy array representing point cloud data.
-    :param file_path: File path to save the point cloud.
-    """
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(np_array)
-    o3d.io.write_point_cloud(str(file_path), pcd)
- 
 
 def abs_cum_distance_in_patch(patch: np.ndarray) -> float:
     """
@@ -62,10 +51,10 @@ def abs_cum_distance_in_patch(patch: np.ndarray) -> float:
     """
     # Subtract every point from every other point (broadcasting)
     diff = patch[:, np.newaxis, :] - patch[np.newaxis, :, :]
-    
+
     # Calculate the squared distance for each pair
-    squared_dist = np.sum(diff**2, axis=-1)
-    
+    squared_dist = np.sum(diff ** 2, axis=-1)
+
     # Take the square root to get the actual distances and sum them up
     return np.sum(np.sqrt(squared_dist[np.triu_indices_from(squared_dist, k=1)]))
 
@@ -81,7 +70,7 @@ def modified_coefficient_of_variation(predicted_point_patches: np.ndarray) -> fl
     distances = [abs_cum_distance_in_patch(patch) for patch in predicted_point_patches]
     if not distances:
         return 0
-    
+
     distances_array = np.array(distances)
     mean = np.mean(distances_array)
     sd = np.std(distances_array)
@@ -94,7 +83,6 @@ def modified_coefficient_of_variation(predicted_point_patches: np.ndarray) -> fl
     return cv
 
 
-
 def to_cpu(*tensors: torch.Tensor) -> Tuple[np.ndarray, ...]:
     """
     Move a list of tensors to CPU and convert them to NumPy arrays.
@@ -103,17 +91,6 @@ def to_cpu(*tensors: torch.Tensor) -> Tuple[np.ndarray, ...]:
     :return: Tuple of NumPy arrays corresponding to the input tensors.
     """
     return tuple(t.detach().cpu().numpy() for t in tensors)
-
-
-def save_as_json(data, file_path: Path):
-    """
-    Save data to a JSON file.
-
-    :param data: Data to save.
-    :param file_path: Path to the JSON file.
-    """
-    with file_path.open('w') as f:
-        json.dump(data, f)
 
 
 def save_graph(nodes: np.array, hierarchy_edges: np.array, path: Path) -> None:
@@ -131,6 +108,7 @@ def save_graph(nodes: np.array, hierarchy_edges: np.array, path: Path) -> None:
     np.save(path / 'nodes.npy', nodes)
     np.save(path / 'hierarchy_edges.npy', hierarchy_edges)
 
+
 def load_default_graph(path: Path):
     """
     Load a yaml file from a given directory
@@ -143,7 +121,7 @@ def load_default_graph(path: Path):
     return data
 
 
-def add_node_feature_partnet(nodes, label, feature, base_type: int = None): 
+def add_node_feature_partnet(nodes, label, feature, base_type: int = None):
     """
     Adds a feature to a specific node identified by its label in a graph. If the node already 
     contains a feature, this function duplicates the node and adds the new feature to the duplicate,
@@ -153,18 +131,17 @@ def add_node_feature_partnet(nodes, label, feature, base_type: int = None):
     :param node_label: The label of the node to which the feature should be added or duplicated.
     :param feature: patch encoding from PointMAE encoder. 
     :return: The updated graph dictionary with the feature added or node duplicated.
-    """    
-    shared_leaf_nodes = [1, 7, 8, 11] 
-    
+    """
+    shared_leaf_nodes = [1, 7, 8, 11]
+
     base_types = {
-            "regular_leg_base": 28,
-            "drawer_base": 26,
-            "pedestal_base": 25,
-            "star_leg_base": 29
+        "regular_leg_base": 28,
+        "drawer_base": 26,
+        "pedestal_base": 25,
+        "star_leg_base": 29
     }
 
     base_type = base_types[base_type]
-
 
     # Iterate through the nodes
     for node in nodes:
@@ -175,15 +152,16 @@ def add_node_feature_partnet(nodes, label, feature, base_type: int = None):
                 node['parent_node'] = base_type
                 new_node['feature'] = feature
                 nodes.append(new_node)
-                break # added feature
+                break  # added feature
             else:
                 new_node = node.copy()
                 new_node['feature'] = feature
                 nodes.append(new_node)
-                break # added feature
+                break  # added feature
     return nodes
 
-def add_node_feature_ceasar(nodes, label, feature): 
+
+def add_node_feature_ceasar(nodes, label, feature):
     """
     Adds a feature to a specific node identified by its label in a graph. If the node already 
     contains a feature, this function duplicates the node and adds the new feature to the duplicate,
@@ -193,14 +171,14 @@ def add_node_feature_ceasar(nodes, label, feature):
     :param node_label: The label of the node to which the feature should be added or duplicated.
     :param feature: patch encoding from PointMAE encoder. 
     :return: The updated graph dictionary with the feature added or node duplicated.
-    """    
+    """
     # Iterate through the nodes
     for node in nodes:
         if node['label'] == label:
             new_node = node.copy()
             new_node['feature'] = feature
             nodes.append(new_node)
-            break # added feature
+            break  # added feature
     return nodes
 
 
@@ -213,11 +191,12 @@ def nodes_to_numpy(nodes, feature_dim: int, cfg=None):
     :return: Structured numpy array of nodes.
     """
     type_to_int = {"part": 0, "sub_structure": 1, "object": 2}
-    nodes_dtype = [('feature', np.float32, (feature_dim,)), ('label', np.float32), ('parent_node', np.float32), ('center', np.float32, (3,)), ('pos_embedding', np.float32, (feature_dim,))]
-    
+    nodes_dtype = [('feature', np.float32, (feature_dim,)), ('label', np.float32), ('parent_node', np.float32),
+                   ('center', np.float32, (3,)), ('pos_embedding', np.float32, (feature_dim,))]
+
     # Initialize an empty list to store node data
     new_nodes = []
-    
+
     # Store features separately for calculating the average
     features = []
     pos_embeddings = []
@@ -225,22 +204,25 @@ def nodes_to_numpy(nodes, feature_dim: int, cfg=None):
     # Loop through each node in the input
     for node in nodes:
         feature = node['feature']
-        pos_embedding = np.zeros(feature_dim, dtype=np.float32) if node['pos_embedding'] is None else np.array(node['pos_embedding'][0])
+        pos_embedding = np.zeros(feature_dim, dtype=np.float32) if node['pos_embedding'] is None else np.array(
+            node['pos_embedding'][0])
         if np.any(feature):  # add to list to calculate avg for master node
             features.append(feature)  # Only append non-zero features
-            pos_embeddings.append(pos_embedding) # Only append non-zero embeddings
-        new_node = (feature, node['label'], node['parent_node'], np.zeros(3, dtype=np.float32), pos_embedding)  # Assume center is zero if not provided
+            pos_embeddings.append(pos_embedding)  # Only append non-zero embeddings
+        new_node = (feature, node['label'], node['parent_node'], np.zeros(3, dtype=np.float32),
+                    pos_embedding)  # Assume center is zero if not provided
         new_nodes.append(new_node)
 
     # Convert list of nodes to a structured numpy array
     structured_nodes = np.array(new_nodes, dtype=nodes_dtype)
 
-     # TODO: old code, does not apply: Optionally remove nodes with all-zero features if the configuration specifies
+    # old code, does not apply: Optionally remove nodes with all-zero features if the configuration specifies
     if not cfg.use_default_graph:
         ValueError("setting use_default_graph to False is not allowed!")
         structured_nodes = np.array([node for node in structured_nodes if np.any(node['feature'])], dtype=nodes_dtype)
 
     return structured_nodes
+
 
 def nodes_to_numpy_ceasar(nodes, feature_dim: int, cfg=None):
     """
@@ -251,10 +233,10 @@ def nodes_to_numpy_ceasar(nodes, feature_dim: int, cfg=None):
     :return: Structured numpy array of nodes.
     """
     nodes_dtype = [('feature', np.float32, (feature_dim,)), ('label', np.float32), ('parent_node', np.float32)]
-    
+
     # Initialize an empty list to store node data
     new_nodes = []
-    
+
     # Store features separately for calculating the average
     features = []
 
@@ -269,7 +251,7 @@ def nodes_to_numpy_ceasar(nodes, feature_dim: int, cfg=None):
     # Convert list of nodes to a structured numpy array
     structured_nodes = np.array(new_nodes, dtype=nodes_dtype)
 
-     # TODO: old code, does not apply: Optionally remove nodes with all-zero features if the configuration specifies
+    # old code, does not apply: Optionally remove nodes with all-zero features if the configuration specifies
     if not cfg.use_default_graph:
         ValueError("setting use_default_graph to False is not allowed!")
         structured_nodes = np.array([node for node in structured_nodes if np.any(node['feature'])], dtype=nodes_dtype)
@@ -286,10 +268,10 @@ def generate_edges(nodes) -> np.ndarray:
     :param edge_attribute: A boolean flag to decide whether to include edge attributes directly in the edge tuples.
     :return: An array of tuples, where each tuple (i, j) represents an edge from node i to node j.
     """
-    
+
     # Create a mapping from node identifiers to their indices
     node_index_mapping = {node['label']: idx for idx, node in enumerate(nodes)}
-    
+
     edge_index = []
     for idx, node in enumerate(nodes):
         parent_node = node['parent_node']
@@ -299,7 +281,7 @@ def generate_edges(nodes) -> np.ndarray:
                 edge_index.append((parent_index, idx))
 
     return np.array(edge_index).T
-        
+
 
 ### Dummy Classifier ###
 
@@ -307,7 +289,8 @@ def generate_edges(nodes) -> np.ndarray:
 def run_dummy_classifier(data_module, cfg):
     epochs = cfg.epochs
     if getattr(cfg, 'dummy_classifier', False) and getattr(cfg.model, 'noise_percentage', 'None') != 'None':
-        raise ValueError("When running the dummy classifier, you need to set noise_percentage to None otherwise the results will not show up correctly in wandb.")
+        raise ValueError(
+            "When running the dummy classifier, you need to set noise_percentage to None otherwise the results will not show up correctly in wandb.")
 
     train_loader = data_module.train_dataloader()
     val_loader = data_module.val_dataloader()
@@ -331,12 +314,8 @@ def run_dummy_classifier(data_module, cfg):
 
     y_pred = dummy_clf.predict(X_val)
     acc = accuracy_score(y_val, y_pred)
-    
+
     #Connot set baseline in WandB so we simulate multiple epochs to make it show up as we want
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1}/{epochs}, Dummy Classifier Accuracy: {acc}")
         wandb.log({'epoch': epoch + 1, 'Validation Accuracy': acc})
-
-
-
-

@@ -1,10 +1,10 @@
 import logging
 from typing import Union
 
-
 logger_initialized: dict[str, bool] = {}
 
-def get_logger(name: str, log_level: int=logging.INFO) -> logging.Logger:
+
+def get_logger(name: str, log_level: int = logging.INFO) -> logging.Logger:
     """
     Creates a simple logger, to log information to the console. 
     :param name: The name of the logger. 
@@ -15,12 +15,12 @@ def get_logger(name: str, log_level: int=logging.INFO) -> logging.Logger:
     logger = logging.getLogger(name)
     if name in logger_initialized:
         return logger
-    
+
     # Prevents reinitializing already initialized loggers, especially in hierarchical logger structures.
     for logger_name in logger_initialized:
         if name.startswith(logger_name):
             return logger
-    
+
     # Adjust log level of existing StreamHandlers to avoid duplicate logging in certain environments.
     for handler in logger.root.handlers:
         if isinstance(handler, logging.StreamHandler):
@@ -28,7 +28,6 @@ def get_logger(name: str, log_level: int=logging.INFO) -> logging.Logger:
 
     stream_handler = logging.StreamHandler()
     handlers = [stream_handler]
-
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -44,7 +43,7 @@ def get_logger(name: str, log_level: int=logging.INFO) -> logging.Logger:
     return logger
 
 
-def print_log(msg: str, logger: Union[None, str]=None, level: int=logging.INFO):
+def print_log(msg: str, logger: Union[None, str] = None, level: int = logging.INFO):
     """
     Print a log message either to the console, to a specified logger, or silently.
     
