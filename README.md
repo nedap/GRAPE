@@ -1,5 +1,6 @@
 # Self-Supervised Representation Learning in Point Clouds for Hierarchical Graph-Based Anatomical Structure Identification
 by Niels Rocholl
+
 Supervised by Thomas Markus and Matthia Sabatelli
 
 Graph Representation of Advanced Part Encodings (GRAPE) is a novel framework for identifying anatomical structures in 3D point clouds of human bodies. GRAPE integrates self-supervised learning with graph neural networks to create graph-based representations of 3D objects. Each node in the graph is enriched with latent features derived from the object's parts, generated using a Masked Autoencoder (Point-MAE), which captures the geometric and spatial information of the point cloud.
